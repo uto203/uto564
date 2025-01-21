@@ -1,0 +1,8 @@
+[2025/01/21 22:39:44.60] Starting installation... 
+Requirement already satisfied: pip in c:\users\uto\appdata\local\programs\python\python311\lib\site-packages (24.3.1)
+Requirement already satisfied: pygame in c:\users\uto\appdata\local\programs\python\python311\lib\site-packages (2.6.1)
+Requirement already satisfied: opencv-python in c:\users\uto\appdata\local\programs\python\python311\lib\site-packages (4.10.0.84)
+Requirement already satisfied: numpy>=1.21.2 in c:\users\uto\appdata\local\programs\python\python311\lib\site-packages (from opencv-python) (1.23.5)
+Requirement already satisfied: numpy in c:\users\uto\appdata\local\programs\python\python311\lib\site-packages (1.23.5)
+Requirement already satisfied: tk in c:\users\uto\appdata\local\programs\python\python311\lib\site-packages (0.1.0)
+[2025/01/21 22:40:03.20] Dependencies installed successfully! 
