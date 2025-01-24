@@ -14,4 +14,4 @@ Version: 1.0.0
 This game is for personal and commercial use. Redistribution or modification is prohibited without permission.
 
 ## license: 空想詩低
-sites.google.com/view/uto-tz/規約/ガイドライン
+https://www.sites.google.com/view/uto-tz/規約/ガイドライン
