@@ -2,7 +2,7 @@
 このリポジトリは、本project 空想詩低 をインストールするためのリポジトリになります。ここからインストーラーをインストールしても構いません。
 # Game Title: 空想詩低
 Developed by: uto
-Version: 1.0.0
+Version: 2.0.0
 
 ## Credits
 - Engine: Pygame
