@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>空想詩低ゲームインストーラー</title>
+<link href="http://utooo.s322.xrea.com/image/icon.ico" rel="shortcut icon" type="image/vnd.microsoft.icon"/> <!-- アイコン -->
+<link href="http://utooo.s322.xrea.com/image/icon.ico" rel="icon" type="image/vnd.microsoft.icon"/> <!-- アイコン -->
+<style>
+        html, body {
+            overflow: hidden;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Hannotate TC", "Yu Mincho", serif;
+            background: url('http://utooo.s322.xrea.com/701_20250101030414.png') no-repeat center fixed;
+            background-size: cover;
+            color: #8ac1ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-position 0.1s;
+        }
+
+        .container {
+            width: 80%;
+            height: 90%;
+            display: grid;
+            grid-template-rows: 2fr 3fr;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+            border: 5px solid #2142ff5e;
+            background: rgba(97, 137, 150, 0.404);
+            box-shadow: 0 0 25px #5973bb;
+            border-radius: 15px;
+        }
+
+        .header {
+            grid-column: span 3;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 5px solid #7381d4;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('http://utooo.s322.xrea.com/image/2026-01-06%20180346.png') no-repeat center;
+            background-size: cover;
+            filter: blur(8px);
+            z-index: 1;
+        }
+
+        .header-title {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            color: #ffffff;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+        }
+
+        .news {
+            background: rgba(40, 39, 34, 0.8);
+            color: #3db8ff;
+            border: 3px solid #3c3abb8e;
+            padding: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .game-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            background: rgba(63, 62, 58, 0.452);
+            border: 3px solid #3c3abb8e;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .game-section button {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-family: "Hannotate TC", serif;
+            color: #9ff9ff;
+            background: linear-gradient(45deg, #5963bb80, #7281d975);
+            border: 3px solid #3051c9;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+        }
+
+        .game-section button:hover {
+            background-color: #a6b6ff;
+            box-shadow: 0 0 10px #b3a6ff;
+        }
+
+        .game-section button:active {
+            transform: scale(0.95);
+        }
+
+        .terminal {
+            margin-top: 10px;
+            background: #1f1e1a21;
+            color: #6deeff;
+            font-family: "Courier New", monospace;
+            width: 90%;
+            height: 200px;
+            padding: 10px;
+            border: 2px solid #5963bb;
+            overflow-y: auto;
+            border-radius: 5px;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 1.5rem;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+
+</head>
+<body>
+<div class="container">
+<div class="header">
+<div class="header-title">空想インストーラー</div>
+</div>
+<div class="news">
+<iframe referrerpolicy="no-referrer" sandbox="allow-scripts allow-forms" scrolling="yes" src="http://utooo.s322.xrea.com/news.web/news.html" style="width: 100%; height: 100%; border: none; overflow: auto;"></iframe>
+</div>
+<div class="game-section">
+<h1>空想詩低ゲームインストーラー</h1>
+<!-- サーバー側から渡された update_available 状態によりボタン表示を切替 -->
+<button id="installButton">
+    {{ "アップデート開始" if update_available else "インストール開始" }}
+  </button>
+<button id="playButton" style="display: none;">ショートカット作成</button>
+<div class="terminal" id="output"></div>
+<div class="error-message" id="errorMessage" style="display: none;">サーバーに接続できません。ローカルサーバーを起動してください。</div>
+</div>
+<script>
+  // タブが閉じられる際にサーバーへ通知する処理
+  window.addEventListener("unload", function() {
+      // navigator.sendBeacon を使用すると非同期でリクエストが送信されます
+      navigator.sendBeacon("/tab_closed");
+  });
+    // 1秒ごとに /keep_alive エンドポイントへpingを送信
+    setInterval(() => {
+    fetch('/keep_alive', { method: 'POST' })
+      .then(response => response.json())
+      .then(data => console.log(data.status))
+      .catch(err => {
+        console.error("ping エラー:", err);
+        document.getElementById("errorMessage").style.display = "block";
+      });
+  }, 1000);
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // tojson フィルターにより、update_available が boolean として出力されます。
+        const updateAvailable = JSON.parse('{{ update_available|tojson }}');
+        const body = document.body;
+        const installButton = document.getElementById("installButton");
+        const playButton = document.getElementById("playButton");
+        const output = document.getElementById("output");
+    
+        function addOutputMessage(message) {
+          const newMessage = document.createElement("div");
+          newMessage.textContent = message;
+          output.appendChild(newMessage);
+          output.scrollTop = output.scrollHeight;
+        }
+      
+        // マウス移動で背景位置を更新
+        document.addEventListener("mousemove", (event) => {
+          const xPercent = (event.clientX / window.innerWidth) * 50;
+          const yPercent = (event.clientY / window.innerHeight) * 50;
+          body.style.backgroundPosition = `${50 + xPercent}% ${50 + yPercent}%`;
+        });
+      
+        installButton.addEventListener("click", () => {
+          if (updateAvailable) {
+            // アップデート処理（管理者認証削除済み）
+            installButton.disabled = true;
+            installButton.textContent = "アップデート中...";
+            addOutputMessage("アップデート開始...");
+            fetch("/update", { method: "POST" })
+              .then(response => response.json())
+              .then(data => {
+                if (data.status === "success") {
+                  addOutputMessage("アップデート完了！");
+                  addOutputMessage("アップデート済みバージョン: " + data.existing_versions.join(", "));
+                  addOutputMessage("新しくアップデートされたバージョン: " + data.updated_versions.join(", "));
+                  installButton.style.display = "none";
+                  playButton.style.display = "block";
+                } else {
+                  addOutputMessage("アップデート失敗: " + data.message);
+                  installButton.disabled = false;
+                  installButton.textContent = "アップデート開始";
+                }
+              })
+              .catch(err => {
+                addOutputMessage("エラー: " + err.message);
+                installButton.disabled = false;
+                installButton.textContent = "アップデート開始";
+              });
+          } else {
+            // インストール処理（既存の処理）
+            installButton.disabled = true;
+            installButton.textContent = "インストール中...";
+            addOutputMessage("インストール開始...");
+            fetch("/install", { method: "POST" })
+              .then(response => response.json())
+              .then(data => {
+                if (data.status === "success") {
+                  addOutputMessage("インストール完了！");
+                  installButton.style.display = "none";
+                  playButton.style.display = "block";
+                } else {
+                  addOutputMessage("インストール失敗: " + data.message);
+                  installButton.disabled = false;
+                  installButton.textContent = "インストール開始";
+                }
+              })
+              .catch(err => {
+                addOutputMessage("エラー: " + err.message);
+                installButton.disabled = false;
+                installButton.textContent = "インストール開始";
+              });
+          }
+        });
+      
+        playButton.addEventListener("click", () => {
+          addOutputMessage("ショートカットを作成中...");
+          fetch("/create_shortcut", { method: "POST" })
+            .then(response => response.json())
+            .then(data => {
+              if (data.status === "success") {
+                addOutputMessage(data.message);
+              } else {
+                addOutputMessage("エラー: " + data.message);
+              }
+            })
+            .catch(err => {
+              addOutputMessage("エラー: " + err.message);
+            });
+        });
+    
+        // Wキー押下で update.JSON リンク変更用のポップアップを表示する処理
+        document.addEventListener("keydown", (event) => {
+          if (event.key.toLowerCase() === "w") {
+            // 現在の更新リンクを取得
+            fetch("/get_update_link")
+              .then(response => response.json())
+              .then(data => {
+                if (data.status === "success") {
+                  const currentLink = data.update_link;
+                  const newLink = prompt("アップデート情報リンクを入力してください:", currentLink);
+                  if (newLink !== null) {
+                    fetch("/set_update_link", { 
+                      method: "POST",
+                      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                      body: new URLSearchParams({ update_link: newLink })
+                    })
+                    .then(resp => resp.json())
+                    .then(res => {
+                      if (res.status === "success") {
+                        addOutputMessage("更新リンクが保存されました。");
+                      } else {
+                        addOutputMessage("エラー: " + res.message);
+                      }
+                    })
+                    .catch(err => addOutputMessage("エラー: " + err.message));
+                  }
+                } else {
+                  addOutputMessage("更新リンクの取得エラー: " + data.message);
+                }
+              })
+              .catch(err => addOutputMessage("エラー: " + err.message));
+          }
+        });
+    
+      document.addEventListener("DOMContentLoaded", checkForExistingFolder);
+    });
+</script>
+</div></body>
+</html>
+<style>
+    body {
+      margin: 0;
+      font-family: "Noto Serif JP", serif;
+      background-color: #282c34;
+      color: #fff;
+    }
+
+    .notice-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .notice-box {
+      background: linear-gradient(135deg, #4d2c56, #1c1c1c);
+      border: 3px solid #f9e75e;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 90%;
+      width: 500px;
+      max-height: 80%;
+      text-align: center;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    .notice-image {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .notice-content {
+      overflow-y: auto;
+      max-height: 200px;
+      padding: 8px;
+      text-align: left;
+      font-size: 1.2rem;
+      line-height: 1.6;
+    }
+
+    /* カスタムスクロールバー */
+    .notice-content::-webkit-scrollbar,
+    .history-list::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .notice-content::-webkit-scrollbar-thumb,
+    .history-list::-webkit-scrollbar-thumb {
+      background: #f9e75e;
+      border-radius: 8px;
+    }
+
+    .notice-content::-webkit-scrollbar-thumb:hover,
+    .history-list::-webkit-scrollbar-thumb:hover {
+      background: #d1c64d;
+    }
+
+    .notice-content::-webkit-scrollbar-track,
+    .history-list::-webkit-scrollbar-track {
+      background: #4d2c56;
+      border-radius: 8px;
+    }
+
+    .close-btn {
+      background: #f9e75e;
+      color: #4d2c56;
+      border: none;
+      padding: 8px 16px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 16px;
+      align-self: center;
+    }
+
+    /* 過去のお知らせリスト */
+    .history-list {
+      position: fixed;
+      top: -100%;
+      left: 0;
+      width: 100%;
+      background: #1c1c1c;
+      border-bottom: 3px solid #f9e75e;
+      color: #fff;
+      z-index: 2000;
+      transition: top 0.5s ease-in-out;
+      max-height: 50%;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      padding: 10px;
+      border-bottom: 1px solid #444;
+      cursor: pointer;
+    }
+
+    .history-item:hover {
+      background: #4d2c56;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+  </style>
+<!-- テキスト --><!--
+
+<a href="リンク先のＵＲＬ">アンカーテキスト</a>
+
+<hr>
+
+<br/>　　一行
+
+<li>
+
+<p>テキスト</p>  
+
+<p style="color: red;">赤色のテキストです。</p>
+
+<strong>❖内容</strong>
+
+<iframe src="https://drive.google.com/file/d/1VxQO7TnRk_7cAeLhG8K8G5uF7bZTzzrS/preview" allow="autoplay"></iframe>
+
+?id=1
+
+<img src="画像リンク" alt="リリース画像" style="max-width: 100%; height: auto; border-radius: 8px;">
+-->
+<body>
+<div id="notice-container"></div>
+<div class="history-list" id="history-list"></div>
+<script>
+    const notices = [
+      {
+        id: "notice1",
+        title: "❖インストール方法",
+        description: "インストール方法を公開しています☆彡",
+        image: "http://utooo.s322.xrea.com/image/603_20250114071418.png",
+        content: `
+            <b>❖インストール方法</b>
+            <p>以下のページからインストール方法を公開しています☆彡<a href="http://utooo.s322.xrea.com/news.web/news%20Contents.html?id=2">◆◇空想詩低のインストール方法◇◆</a></p>
+        `
+      },
+    ];
+
+    const localStorageKey = "displayedNotices";
+    const displayedNotices = JSON.parse(localStorage.getItem(localStorageKey)) || [];
+
+    const displayNotice = (notice) => {
+      const noticeContainer = document.getElementById("notice-container");
+      noticeContainer.innerHTML = `
+        <div class="notice-overlay">
+          <div class="notice-box">
+            <img src="${notice.image}" alt="お知らせ画像" class="notice-image">
+            <div class="notice-content">${notice.content}</div>
+            <button class="close-btn" onclick="closeNotice()">閉じる</button>
+          </div>
+        </div>
+      `;
+      displayedNotices.push(notice.id);
+      localStorage.setItem(localStorageKey, JSON.stringify(displayedNotices));
+    };
+
+    const closeNotice = () => {
+      const noticeContainer = document.getElementById("notice-container");
+      noticeContainer.innerHTML = "";
+    };
+
+    const renderNotices = () => {
+      const notice = notices.find(n => !displayedNotices.includes(n.id));
+      if (notice) displayNotice(notice);
+    };
+
+    const renderHistory = () => {
+      const historyList = document.getElementById("history-list");
+      historyList.innerHTML = notices.map(n => `
+        <div class="history-item" onclick="showNotice('${n.id}')">
+          <strong>${n.title}</strong>: ${n.description.slice(0, 10)}...
+        </div>
+      `).join("");
+    };
+
+    const showNotice = (id) => {
+      const notice = notices.find(n => n.id === id);
+      if (notice) displayNotice(notice);
+    };
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key.toLowerCase() === "q") {
+        const historyList = document.getElementById("history-list");
+        if (historyList.style.top === "0px") {
+          historyList.style.top = "-100%";
+        } else {
+          historyList.style.top = "0";
+          renderHistory();
+        }
+      }
+    });
+
+    renderNotices();
+  </script>
+</body>
+<head>
+<style>
+        /* 未訪問リンクの色 */
+        a:link {
+            color: rgb(255, 245, 103);
+        }
+
+        /* 訪問済みリンクの色 */
+        a:visited {
+            color: rgb(236, 102, 236);
+        }
+
+        /* ホバー時のリンクの色 */
+        a:hover {
+            color: rgb(255, 123, 0);
+        }
+
+        /* アクティブリンクの色 */
+        a:active {
+            color: rgb(255, 0, 0);
+        }
+        b {
+            color: rgb(200, 104, 245); /* 太字の色を指定 */
+            font-size: 24px; /* 太字のサイズを指定 */
+            position: relative; /* 線をテキストに紐づける */
+        }
+
+        b::after {
+            content: ""; /* 擬似要素を作成 */
+            position: absolute;
+            left: 0;
+            bottom: -5px; /* テキストの下に5pxの余白を設定 */
+            width: 100%; /* テキストの幅に合わせる */
+            height: 4px; /* 線の太さ */
+            background: linear-gradient(to right, #562c56, rgba(255, 255, 255, 0)); /* グラデーションを設定 */
+        }
+    </style>
+
+</head>
