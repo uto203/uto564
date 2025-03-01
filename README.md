@@ -1,7 +1,7 @@
 
 # uto564
 このリポジトリは、本project 空想詩低 をインストールするためのリポジトリになります。ここからインストーラーをインストールしても構いません。
-# Game Title: 空想詩低
+# Game Title: 空想詩低 version 2.0
 Developed by: uto
 Version: 2.0.0
 
