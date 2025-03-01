@@ -1,9 +1,13 @@
 
 # uto564
 このリポジトリは、本project 空想詩低 をインストールするためのリポジトリになります。ここからインストーラーをインストールしても構いません。
-# Game Title: 空想詩低 version 2.0
+# Game Title: 空想詩低
 Developed by: uto
-Version: 2.0.0
+Version: 2.0
+
+# Game Title: 初光彩(インストーラー)
+Developed by: uto
+Version: 3.2
 
 ## Credits
 - Engine: Pygame
