@@ -8,7 +8,7 @@ Version: 2.0
 
 # Game Title: 初光彩(インストーラー)
 Developed by: uto
-Version: 3.2
+Version: 3.3
 
 ## Credits
 - Engine: Pygame
